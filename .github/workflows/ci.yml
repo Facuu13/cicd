@@ -1,18 +1,18 @@
-name: Mi primer CI
+name: Mi primer CI   # nombre del pipeline
 
-on: [push]   # cada vez que hago git push
+on: [push]           # se dispara cada vez que hago git push
 
-jobs:
+jobs:                # cada pipeline tiene 1 o más "jobs"
   build:
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ubuntu-latest   # GitHub va a crear una máquina virtual Ubuntu
+    steps:                   # pasos a ejecutar
       - name: Checkout código
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2   # descarga tu repo en esa máquina
 
       - name: Instalar Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.11"
+          python-version: "3.11"    # instala Python 3.11
 
       - name: Ejecutar script
-        run: python hello.py
+        run: python hello.py        # corre tu script
