@@ -76,3 +76,195 @@ Si usás **GitHub**, ya podés probar CI con casi nada:
 Esto sería tu **primer pipeline CI/CD**: súper simple pero ya muestra el concepto.
 
 ---
+
+# 🔹 Tema 2: CI vs CD (qué cambia y cómo se usan)
+
+### 1. CI (Continuous Integration)
+
+Ya lo viste en el ejemplo anterior:
+
+* Cada vez que hacés `git push`, se corre un **pipeline** que compila o prueba tu código automáticamente.
+* Te asegura que el código **siempre se pueda integrar** con la rama principal sin romper nada.
+
+Ejemplo en tu caso:
+
+* Subís un cambio a un módulo en Python o C.
+* GitHub Actions compila el código o corre `pytest`.
+* Si algo falla, lo ves al toque.
+
+👉 **CI = testear y validar cada cambio automáticamente.**
+
+---
+
+### 2. CD (Continuous Delivery / Continuous Deployment)
+
+Esto es el **paso siguiente**.
+
+* **Continuous Delivery**: después de que pasa CI, el sistema genera un **paquete listo para desplegar** (ej: un `.bin` para un ESP32, una imagen Docker, o un `.deb` para Linux). El despliegue todavía puede ser manual.
+* **Continuous Deployment**: va un paso más: además de generar el paquete, lo **publica automáticamente en el entorno final** (servidor, nube, producción).
+
+---
+
+### 3. Ejemplo concreto para vos
+
+Imaginemos que tenés un **firmware para ESP32** y una **app web de monitoreo**:
+
+* **CI**:
+
+  * Se compila el firmware cada vez que hacés un push.
+  * Se corren tests unitarios de la app web.
+
+* **CD**:
+
+  * Se genera el `.bin` del firmware y se guarda como **artifact** en GitHub (para que vos o el equipo lo descarguen).
+  * Se construye una imagen Docker de la app web y se sube a **Docker Hub**.
+  * Incluso se podría desplegar esa imagen automáticamente en un servidor de prueba o producción.
+
+---
+
+### 4. Ejemplo práctico (paso más allá del hello.py)
+
+En vez de solo correr `hello.py`, ahora agregamos un paso de “build + artifact”:
+
+```yaml
+name: CI/CD demo
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Compilar código (ejemplo simple)
+        run: |
+          echo "Compilando..."
+          mkdir build
+          echo "Soy un binario falso 🚀" > build/firmware.bin
+
+      - name: Guardar artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: build/firmware.bin
+```
+
+👉 ¿Qué pasa acá?
+
+1. Cada push crea un archivo `firmware.bin`.
+2. GitHub lo guarda como **artifact**.
+3. Vos podés entrar a la pestaña **Actions** y descargar ese binario.
+
+Ese sería un ejemplo **Continuous Delivery**: siempre tenés un binario listo para bajar.
+
+---
+
+✅ Resumen fácil:
+
+* **CI** = compilo/testeo cada cambio.
+* **CD** = genero un paquete/binario listo para usar (y a veces lo despliego solo).
+
+---
+
+# 🔹 Tema 3: Cómo se arma un pipeline de CI/CD
+
+Un **pipeline** es como una receta de cocina:
+
+* Se define en un archivo (ej: YAML en GitHub Actions).
+* Tiene **jobs** (trabajos grandes).
+* Cada job tiene **steps** (pasos concretos).
+* Se ejecutan en un **runner** (máquina virtual o contenedor donde se corren los pasos).
+
+---
+
+## 1. Jobs
+
+* Un **job** es un conjunto de pasos que se ejecutan en una misma máquina virtual.
+* Ejemplo: un job de **compilar** y otro job de **testear**.
+* Los jobs se pueden correr en paralelo o en secuencia.
+
+```yaml
+jobs:
+  build:     # primer job
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Compilando código"
+
+  test:      # segundo job
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Corriendo tests"
+```
+
+👉 Cuando hacés push, vas a ver dos cajitas en GitHub Actions: **build** y **test**.
+
+---
+
+## 2. Steps
+
+* Dentro de cada job hay **steps** (pasos).
+* Los steps pueden ser:
+
+  * Un comando `run` (ej: `python main.py`)
+  * Una **acción reutilizable** (ej: `actions/checkout@v2`)
+
+Ejemplo mini-pipeline:
+
+```yaml
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Primer paso
+        run: echo "Hola Facu 🚀"
+      - name: Segundo paso
+        run: echo "Este es otro paso"
+```
+
+---
+
+## 3. Runners
+
+* El **runner** es la máquina donde se ejecuta todo.
+* GitHub te da runners listos: Ubuntu, Windows, Mac.
+* También podés tener **self-hosted runners** (ej: tu propia PC o un servidor).
+
+Ejemplo:
+
+```yaml
+runs-on: ubuntu-latest   # usa un runner Ubuntu en la nube
+```
+
+---
+
+## 4. Artifacts
+
+* Un **artifact** es un archivo que se genera en el pipeline y que podés descargar después.
+* Ejemplo típico: compilar un binario, guardar logs, exportar un reporte.
+
+```yaml
+- name: Generar archivo
+  run: echo "Soy un binario falso" > output.bin
+
+- name: Guardar artifact
+  uses: actions/upload-artifact@v3
+  with:
+    name: mi-binario
+    path: output.bin
+```
+
+👉 Después del pipeline, vas a la pestaña **Actions → Run → Artifacts** y descargás `mi-binario.zip`.
+
+---
+
+## 🧩 Resumen fácil
+
+* **Pipeline** = receta de pasos.
+* **Jobs** = tareas grandes (compilar, testear, desplegar).
+* **Steps** = pasos concretos dentro de cada tarea.
+* **Runner** = la máquina que ejecuta todo.
+* **Artifact** = archivo que guardás del pipeline.
+
+---
+
