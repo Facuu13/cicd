@@ -17,3 +17,9 @@ jobs:
 
       - name: Ejecutar programa
         run: ./programa
+      
+      - name: Guardar binario como artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: binario
+          path: programa
