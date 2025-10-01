@@ -1,18 +1,22 @@
-name: CI Python   # nombre del pipeline
+name: CI Python
 
-on: [push]           # se dispara cada vez que hago git push
+on:
+  push:
+    paths:
+      - "python_app/**"
+      - ".github/workflows/ci-python.yml"
+    paths-ignore:
+      - "README.md"
+  pull_request:
+    paths:
+      - "python_app/**"
 
-jobs:                # cada pipeline tiene 1 o más "jobs"
-  build:
-    runs-on: ubuntu-latest   # GitHub va a crear una máquina virtual Ubuntu
-    steps:                   # pasos a ejecutar
-      - name: Checkout código
-        uses: actions/checkout@v2   # descarga tu repo en esa máquina
-
-      - name: Instalar Python
-        uses: actions/setup-python@v2
+jobs:
+  python-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
-          python-version: "3.11"    # instala Python 3.11
-
-      - name: Ejecutar script
-        run: python hello.py        # corre tu script
+          python-version: "3.11"
+      - run: python python_app/hello.py

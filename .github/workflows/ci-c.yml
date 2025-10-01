@@ -1,25 +1,22 @@
 name: CI C
 
-on: [push]   # también se ejecuta en cada git push
+on:
+  push:
+    paths:
+      - "c_app/**"
+      - ".github/workflows/ci-c.yml"
+    paths-ignore:
+      - "README.md"
+  pull_request:
+    paths:
+      - "c_app/**"
+    
 
 jobs:
   c-job:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v2
-
-      - name: Instalar compilador C
-        run: sudo apt-get update && sudo apt-get install -y gcc
-
-      - name: Compilar programa
-        run: gcc main.c -o programa
-
-      - name: Ejecutar programa
-        run: ./programa
-      
-      - name: Guardar binario como artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: binario
-          path: programa
+      - uses: actions/checkout@v2
+      - run: sudo apt-get update && sudo apt-get install -y gcc
+      - run: gcc c_app/main.c -o c_app/programa
+      - run: ./c_app/programa
