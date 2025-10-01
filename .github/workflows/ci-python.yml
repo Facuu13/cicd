@@ -1,4 +1,4 @@
-name: Mi primer CI   # nombre del pipeline
+name: CI Python   # nombre del pipeline
 
 on: [push]           # se dispara cada vez que hago git push
 

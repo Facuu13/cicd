@@ -1,0 +1,19 @@
+name: CI C
+
+on: [push]   # también se ejecuta en cada git push
+
+jobs:
+  c-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v2
+
+      - name: Instalar compilador C
+        run: sudo apt-get update && sudo apt-get install -y gcc
+
+      - name: Compilar programa
+        run: gcc main.c -o programa
+
+      - name: Ejecutar programa
+        run: ./programa
