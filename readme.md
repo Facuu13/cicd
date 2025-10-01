@@ -268,3 +268,106 @@ runs-on: ubuntu-latest   # usa un runner Ubuntu en la nube
 
 ---
 
+# 🔹 Tema 4: Ejemplos de Pipelines Sencillos
+
+---
+
+## 🟢 Ejemplo 1: Pipeline con un solo Job
+
+Este es el más básico: cada vez que hago `git push`, se ejecuta un job que imprime algo.
+
+```yaml
+name: Ejemplo simple
+
+on: [push]   # se ejecuta cuando hago git push
+
+jobs:
+  hola:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mostrar mensaje
+        run: echo "Hola Facu 🚀, este es mi primer pipeline"
+```
+
+👉 Qué hace:
+
+1. Cuando hacés `git push`, GitHub corre este workflow.
+2. Se levanta una máquina Ubuntu.
+3. Ejecuta el comando `echo "Hola Facu 🚀, este es mi primer pipeline"`.
+4. Podés ver el resultado en la pestaña **Actions** de tu repo.
+
+---
+
+## 🟡 Ejemplo 2: Pipeline con 2 Jobs en paralelo
+
+Ahora agregamos dos jobs que se ejecutan al mismo tiempo: uno compila y otro testea.
+
+```yaml
+name: Ejemplo con 2 jobs
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compilar código
+        run: echo "Compilando proyecto..."
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecutar tests
+        run: echo "Corriendo tests..."
+```
+
+👉 Qué pasa:
+
+* Job **build** y job **test** se ejecutan en paralelo.
+* En la interfaz de GitHub Actions ves **dos cajitas**: cada una con su salida.
+* En un proyecto real, el primero podría compilar firmware y el segundo correr unit tests.
+
+---
+
+## 🔵 Ejemplo 3: Pipeline con Artifact
+
+Ahora generamos un archivo (como si fuera un binario de firmware) y lo guardamos.
+
+```yaml
+name: Ejemplo con artifact
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Crear archivo binario
+        run: |
+          mkdir build
+          echo "Soy un firmware falso 🚀" > build/firmware.bin
+
+      - name: Guardar artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: build/firmware.bin
+```
+
+👉 Qué hace:
+
+1. Crea una carpeta `build` y un archivo `firmware.bin`.
+2. Lo guarda como **artifact**.
+3. Al terminar, vas a **Actions → Run → Artifacts** y lo podés descargar.
+
+En un proyecto real, ahí estaría el `.bin` del ESP32 o una imagen Docker.
+
+---
+
+## 🧩 Resumen
+
+* Con **Ejemplo 1** entendés la mecánica básica.
+* Con **Ejemplo 2** ves que podés dividir el trabajo en varios jobs.
+* Con **Ejemplo 3** aprendés cómo generar y guardar resultados (artifacts).
+
+---
