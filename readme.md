@@ -371,3 +371,311 @@ En un proyecto real, ahí estaría el `.bin` del ESP32 o una imagen Docker.
 * Con **Ejemplo 3** aprendés cómo generar y guardar resultados (artifacts).
 
 ---
+
+# 🔹 Tema 5: CI con **tests de Python** (pytest)
+
+## 1) Concepto rápido
+
+* En CI, los **tests** se ejecutan automáticamente en cada push/PR.
+* Si un test falla, el pipeline marca **FAIL** y te avisa antes de mergear/deployar.
+* Herramientas típicas: **pytest** (tests), **coverage** (cobertura), **flake8/ruff** (lint).
+
+---
+
+## 2) Ejemplo real y sencillo
+
+### 📂 Estructura mínima
+
+```
+.
+├── app.py
+├── tests/
+│   └── test_app.py
+└── .github/
+    └── workflows/
+        └── ci-python-tests.yml
+```
+
+### `app.py` (código a testear)
+
+```python
+def sumar(a, b):
+    return a + b
+
+def es_par(n):
+    return n % 2 == 0
+```
+
+### `tests/test_app.py` (pytest)
+
+```python
+import app
+
+def test_sumar():
+    assert app.sumar(2, 3) == 5
+
+def test_es_par_true():
+    assert app.es_par(4) is True
+
+def test_es_par_false():
+    assert app.es_par(5) is False
+```
+
+> Podés correrlos localmente con:
+>
+> ```bash
+> pip install pytest
+> pytest -q
+> ```
+
+---
+
+## 3) Workflow CI en GitHub Actions
+
+### `.github/workflows/ci-python-tests.yml`
+
+```yaml
+name: CI Python - Tests
+
+on:
+  push:
+    paths: ["**/*.py", ".github/workflows/ci-python-tests.yml"]
+  pull_request:
+    paths: ["**/*.py"]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Correr tests
+        run: pytest -q
+```
+
+👉 ¿Qué hace?
+
+1. Se dispara en cada push/PR que toque archivos `.py`.
+2. Levanta un runner Ubuntu.
+3. Instala Python + pytest.
+4. Corre los tests y muestra el reporte en **Actions**.
+
+---
+
+## 4) (Opcional) Matrix de versiones de Python
+
+Para probar contra múltiples versiones (útil en libs):
+
+```yaml
+strategy:
+  matrix:
+    python-version: ["3.10", "3.11", "3.12"]
+
+steps:
+  - uses: actions/setup-python@v5
+    with:
+      python-version: ${{ matrix.python-version }}
+```
+
+---
+
+## 5) (Opcional) Cobertura y artifact del reporte
+
+Añadí cobertura con `coverage.py` y guardá el HTML como artifact.
+
+```yaml
+      - name: Instalar deps (pytest + coverage)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest coverage
+
+      - name: Correr tests con cobertura
+        run: |
+          coverage run -m pytest -q
+          coverage html  # genera carpeta htmlcov/
+
+      - name: Subir reporte de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+```
+
+Luego vas a **Actions → (run) → Artifacts** y descargás `coverage-html` para abrir `index.html` localmente.
+
+---
+
+## 6) (Opcional) Lint rápido (calidad de código)
+
+Agregá **ruff** (o flake8) para chequeos estáticos:
+
+```yaml
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check .
+```
+
+---
+
+## 7) Resumen
+
+* **pytest** valida tu lógica automáticamente.
+* **Artifacts** (reporte HTML de cobertura) te dan visibilidad extra.
+* **Paths** evitan correr pipelines innecesarios.
+* Esto ya es CI “de verdad”: validación automática en cada cambio.
+
+---
+
+# 🔹 Tema 6: Triggers (cuándo corre un pipeline)
+
+En GitHub Actions (y en la mayoría de sistemas CI/CD como GitLab o Jenkins) los pipelines no corren solos, se disparan con **eventos**.
+
+---
+
+## 1) **push**
+
+Se ejecuta cada vez que hacés `git push`.
+
+```yaml
+on: [push]
+```
+
+### Ejemplo con ramas específicas:
+
+```yaml
+on:
+  push:
+    branches: ["main", "develop"]
+```
+
+👉 Corre solo si pusheás a `main` o `develop`.
+
+---
+
+## 2) **pull_request**
+
+Se ejecuta cuando alguien abre un **PR** (pull request).
+Muy usado para **validar antes de mergear**.
+
+```yaml
+on:
+  pull_request:
+    branches: ["main"]
+```
+
+👉 Antes de fusionar a `main`, se corren tests automáticamente.
+
+---
+
+## 3) **workflow_dispatch**
+
+Permite ejecutar el pipeline **a mano**, desde la interfaz de GitHub.
+Ideal para cosas que no querés que se ejecuten siempre.
+
+```yaml
+on:
+  workflow_dispatch:
+```
+
+👉 En la pestaña **Actions** te aparece un botón **“Run workflow”** para lanzarlo cuando quieras.
+
+Incluso podés agregar **inputs** (ej: elegir versión o entorno):
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Entorno"
+        required: true
+        default: "dev"
+```
+
+---
+
+## 4) **schedule**
+
+Permite programar pipelines como un **cronjob**.
+Ejemplo: correr todas las noches a las 3 AM UTC:
+
+```yaml
+on:
+  schedule:
+    - cron: "0 3 * * *"
+```
+
+👉 Muy útil para:
+
+* Correr tests nocturnos.
+* Limpiar caches.
+* Hacer builds periódicos.
+
+---
+
+## 5) **Otros triggers útiles**
+
+* **release** → cuando creás un release en GitHub.
+
+```yaml
+on:
+  release:
+    types: [published]
+```
+
+* **tag push** → cuando subís un tag (ej: `v1.0.0`).
+
+```yaml
+on:
+  push:
+    tags:
+      - "v*"
+```
+
+👉 Esto es clave en proyectos de firmware: podés compilar y generar el binario **solo cuando marcás una versión**.
+
+---
+
+## 🧩 Ejemplo práctico con varios triggers juntos
+
+```yaml
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"
+```
+
+Este workflow corre cuando:
+
+* Hacés push a `main` o `develop`.
+* Hacés un PR hacia `main`.
+* Lo corrés a mano.
+* O se ejecuta automáticamente todos los días a las 3 AM UTC.
+
+---
+
+✅ Resumen rápido:
+
+* `push` → cada vez que subís cambios.
+* `pull_request` → antes de mergear.
+* `workflow_dispatch` → manual.
+* `schedule` → programado (cron).
+* `release` / `tags` → versiones y entregas.
+
+---
+
