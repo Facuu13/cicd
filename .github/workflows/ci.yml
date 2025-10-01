@@ -1,0 +1,18 @@
+name: Mi primer CI
+
+on: [push]   # cada vez que hago git push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v2
+
+      - name: Instalar Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Ejecutar script
+        run: python hello.py
