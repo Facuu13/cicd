@@ -12,9 +12,26 @@ on:
 jobs:
   python-job:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python python_app/hello.py
+          cache: "pip"     # cache de pip para acelerar
+
+      - name: Instalar dependencias (pytest)
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Ejecutar hello.py
+        run: python python_app/hello.py
+
+      - name: Correr tests (pytest)
+        env:
+          PYTHONPATH: .
+        run: pytest -q python_app/tests
