@@ -1,4 +1,4 @@
-from python_app import app
+import python_app.app as app
 
 def test_sumar():
     assert app.sumar(2, 3) == 5
