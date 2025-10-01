@@ -33,4 +33,4 @@ jobs:
       - name: Correr tests (pytest)
         env:
           PYTHONPATH: .
-        run: pytest -q python_app/tests
+        run: pytest -q python_app/test
