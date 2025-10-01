@@ -679,3 +679,237 @@ Este workflow corre cuando:
 
 ---
 
+# 📝 Machete CI/CD para entrevistas
+
+## 🔹 ¿Qué es CI/CD?
+
+* **CI (Continuous Integration):**
+  Cada vez que alguien hace `git push`, el sistema compila y corre tests automáticamente → detecta errores rápido.
+* **CD (Continuous Delivery/Deployment):**
+  Después de CI, el sistema empaqueta (ej: binario, imagen Docker) y lo deja listo para desplegar o lo despliega directo.
+
+👉 CI = integrar sin romper.
+👉 CD = entregar rápido y de forma confiable.
+
+---
+
+## 🔹 Componentes básicos de un pipeline
+
+* **Workflow:** el archivo YAML que define el pipeline.
+* **Job:** una tarea grande (build, test, deploy).
+* **Step:** comandos dentro de un job (ej: `pip install`, `pytest`).
+* **Runner:** máquina donde corre (Ubuntu, Windows, Mac, o self-hosted).
+* **Artifact:** archivo generado (ej: binario `.bin`, reporte de cobertura).
+
+---
+
+## 🔹 Triggers comunes
+
+* `push` → cada vez que subís cambios.
+* `pull_request` → validar antes de mergear.
+* `workflow_dispatch` → correrlo manualmente.
+* `schedule` → programado (cron).
+* `release` / `tags` → cuando creás una versión nueva.
+
+---
+
+## 🔹 Ejemplo ultra simple (Python hello)
+
+```yaml
+name: CI Python
+
+on: [push]
+
+jobs:
+  python-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+      - run: python hello.py
+```
+
+---
+
+## 🔹 Ejemplo con tests (pytest)
+
+```yaml
+- name: Instalar dependencias
+  run: pip install pytest
+
+- name: Correr tests
+  run: pytest -q python_app/tests
+```
+
+---
+
+## 🔹 Ejemplo con artifact
+
+```yaml
+- run: echo "Soy un firmware falso 🚀" > firmware.bin
+- uses: actions/upload-artifact@v3
+  with:
+    name: firmware
+    path: firmware.bin
+```
+
+---
+
+## 🔹 Ejemplo con paths
+
+```yaml
+on:
+  push:
+    paths:
+      - "python_app/**"   # solo si cambia código Python
+```
+
+---
+
+## 🔹 Cómo lo explicar en 30 segundos
+
+*"CI/CD son prácticas para automatizar compilación, pruebas y despliegues.
+En CI, cada push dispara un pipeline que corre tests o compila el código.
+En CD, ese resultado se empaqueta y se entrega automáticamente (como binarios o imágenes Docker).
+Yo armé pipelines con GitHub Actions, configurando jobs que ejecutan scripts de Python y C, con filtros por paths y artifacts descargables. También sé usar triggers como push, PR o manual dispatch."*
+
+---
+¡De una, Facu! 🙌
+Te armo el **machete de Docker básico** — mismo estilo que el de CI/CD, para que tengas lo fundamental bien claro y listo para entrevistas o práctica.
+
+---
+
+# 🐳 Machete Docker para entrevistas
+
+## 🔹 ¿Qué es Docker?
+
+* Plataforma para **empaquetar aplicaciones en contenedores**.
+* Un **contenedor** incluye tu app + dependencias + librerías + sistema base → corre igual en cualquier entorno.
+* Diferencia con una **VM**: la VM emula todo un sistema operativo → más pesado. Docker usa el kernel del host → más liviano y rápido.
+
+👉 Frase corta: *“Docker asegura que mi aplicación corra igual en mi PC, en un server o en la nube.”*
+
+---
+
+## 🔹 Conceptos clave
+
+* **Imagen**: plantilla de solo lectura (ej: `python:3.11`).
+* **Contenedor**: instancia en ejecución de una imagen.
+* **Dockerfile**: receta para construir imágenes.
+* **Registry**: repositorio de imágenes (ej: Docker Hub).
+
+---
+
+## 🔹 Comandos esenciales
+
+```bash
+# correr un contenedor simple
+docker run hello-world
+
+# correr interactivo con bash
+docker run -it ubuntu bash
+
+# listar contenedores en ejecución
+docker ps
+
+# listar TODOS los contenedores (incluye los detenidos)
+docker ps -a
+
+# detener un contenedor
+docker stop <id>
+
+# borrar un contenedor
+docker rm <id>
+
+# listar imágenes locales
+docker images
+
+# borrar una imagen
+docker rmi <id>
+```
+
+---
+
+## 🔹 Crear tu propia imagen (Dockerfile mínimo)
+
+**Dockerfile**
+
+```Dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY app.py .
+CMD ["python", "app.py"]
+```
+
+**app.py**
+
+```python
+print("Hola Facu desde Docker 🚀")
+```
+
+**Construcción y ejecución**
+
+```bash
+docker build -t facu_app .
+docker run facu_app
+```
+
+👉 Eso genera tu propia imagen (`facu_app`) y la ejecuta como contenedor.
+
+---
+
+## 🔹 Mapear puertos y volúmenes
+
+* Mapear puertos:
+
+```bash
+docker run -p 8080:80 nginx
+```
+
+👉 accedés en `http://localhost:8080` a Nginx dentro del contenedor.
+
+* Montar volumen:
+
+```bash
+docker run -v $(pwd):/app ubuntu
+```
+
+👉 compartís tu carpeta actual con `/app` en el contenedor.
+
+---
+
+## 🔹 Casos típicos en entrevistas
+
+1. **Levantar un servicio IoT**:
+
+   ```bash
+   docker run -p 1883:1883 eclipse-mosquitto
+   ```
+
+   👉 broker MQTT en segundos.
+
+2. **Dashboard Node-RED**:
+
+   ```bash
+   docker run -p 1880:1880 nodered/node-red
+   ```
+
+   👉 sin instalar nada en tu máquina.
+
+3. **Workflow CI/CD**:
+
+   * GitHub Actions → build de imagen Docker.
+   * Push a DockerHub.
+   * Deploy automático.
+
+---
+
+## 🔹 Cómo lo explicás en entrevista
+
+*"Docker me permite empaquetar mis apps en contenedores que corren igual en cualquier entorno.
+Sé crear imágenes con Dockerfile, correr servicios como Mosquitto o Node-RED en contenedores, mapear puertos y usar volúmenes.
+También puedo integrar Docker con CI/CD, para construir y publicar imágenes automáticamente en DockerHub."*
+
+---
